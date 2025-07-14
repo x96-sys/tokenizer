@@ -1,0 +1,39 @@
+Respect [Basic Latin (ASCII)](https://www.unicode.org/charts/PDF/U0000.pdf)
+
+|                     Kind |  Hex   |                     Kind |  Hex   |                     Kind |  Hex   |                     Kind |  Hex   |
+| -----------------------: | :----: | -----------------------: | :----: | -----------------------: | :----: | -----------------------: | :----: |
+|                `UNKNOWN` | `0x0`  |                `UNKNOWN` | `0x10` |                  `SPACE` | `0x20` |             `DIGIT_ZERO` | `0x30` |
+|                `UNKNOWN` | `0x1`  |                `UNKNOWN` | `0x11` |       `EXCLAMATION_MARK` | `0x21` |              `HEX_DIGIT` | `0x31` |
+|                    `SOI` | `0x2`  |                `UNKNOWN` | `0x12` |                    `ANY` | `0x22` |              `HEX_DIGIT` | `0x32` |
+|                    `EOI` | `0x3`  |                `UNKNOWN` | `0x13` |            `NUMBER_SIGN` | `0x23` |              `HEX_DIGIT` | `0x33` |
+|                `UNKNOWN` | `0x4`  |                `UNKNOWN` | `0x14` |                    `ANY` | `0x24` |              `HEX_DIGIT` | `0x34` |
+|                `UNKNOWN` | `0x5`  |                `UNKNOWN` | `0x15` |                    `ANY` | `0x25` |              `HEX_DIGIT` | `0x35` |
+|                `UNKNOWN` | `0x6`  |                `UNKNOWN` | `0x16` |                    `ANY` | `0x26` |              `HEX_DIGIT` | `0x36` |
+|                `UNKNOWN` | `0x7`  |                `UNKNOWN` | `0x17` |             `APOSTROPHE` | `0x27` |              `HEX_DIGIT` | `0x37` |
+|                `UNKNOWN` | `0x8`  |                `UNKNOWN` | `0x18` |       `LEFT_PARENTHESIS` | `0x28` |              `HEX_DIGIT` | `0x38` |
+|                `UNKNOWN` | `0x9`  |                `UNKNOWN` | `0x19` |      `RIGHT_PARENTHESIS` | `0x29` |              `HEX_DIGIT` | `0x39` |
+|              `LINE_FEED` | `0xA`  |                `UNKNOWN` | `0x1A` |               `ASTERISK` | `0x2A` |                    `ANY` | `0x3A` |
+|                `UNKNOWN` | `0xB`  |                `UNKNOWN` | `0x1B` |                   `PLUS` | `0x2B` |              `SEMICOLON` | `0x3B` |
+|                `UNKNOWN` | `0xC`  |                `UNKNOWN` | `0x1C` |                    `ANY` | `0x2C` |                    `ANY` | `0x3C` |
+|                `UNKNOWN` | `0xD`  |                `UNKNOWN` | `0x1D` |           `HYPHEN_MINUS` | `0x2D` |                 `EQUALS` | `0x3D` |
+|                `UNKNOWN` | `0xE`  |                `UNKNOWN` | `0x1E` |                    `ANY` | `0x2E` |                    `ANY` | `0x3E` |
+|                `UNKNOWN` | `0xF`  |                `UNKNOWN` | `0x1F` |                    `ANY` | `0x2F` |          `QUESTION_MARK` | `0x3F` |
+
+|                     Kind |  Hex   |                     Kind |  Hex   |                     Kind |  Hex   |                     Kind |  Hex   |
+| -----------------------: | :----: | -----------------------: | :----: | -----------------------: | :----: | -----------------------: | :----: |
+|          `COMMERCIAL_AT` | `0x40` |                  `LATIN` | `0x50` |                    `ANY` | `0x60` |                  `LATIN` | `0x70` |
+|                  `LATIN` | `0x41` |                  `LATIN` | `0x51` |                  `LATIN` | `0x61` |                  `LATIN` | `0x71` |
+|                  `LATIN` | `0x42` |                  `LATIN` | `0x52` |                  `LATIN` | `0x62` |                  `LATIN` | `0x72` |
+|                  `LATIN` | `0x43` |                  `LATIN` | `0x53` |                  `LATIN` | `0x63` |                  `LATIN` | `0x73` |
+|                  `LATIN` | `0x44` |                  `LATIN` | `0x54` |                  `LATIN` | `0x64` |                  `LATIN` | `0x74` |
+|                  `LATIN` | `0x45` |                  `LATIN` | `0x55` |                  `LATIN` | `0x65` |                  `LATIN` | `0x75` |
+|                  `LATIN` | `0x46` |                  `LATIN` | `0x56` |                  `LATIN` | `0x66` |                  `LATIN` | `0x76` |
+|                  `LATIN` | `0x47` |                  `LATIN` | `0x57` |                  `LATIN` | `0x67` |                  `LATIN` | `0x77` |
+|                  `LATIN` | `0x48` | `LATIN_CAPITAL_LETTER_X` | `0x58` |                  `LATIN` | `0x68` |   `LATIN_SMALL_LETTER_X` | `0x78` |
+|                  `LATIN` | `0x49` |                  `LATIN` | `0x59` |                  `LATIN` | `0x69` |                  `LATIN` | `0x79` |
+|                  `LATIN` | `0x4A` |                  `LATIN` | `0x5A` |                  `LATIN` | `0x6A` |                  `LATIN` | `0x7A` |
+|                  `LATIN` | `0x4B` |    `LEFT_SQUARE_BRACKET` | `0x5B` |                  `LATIN` | `0x6B` |     `LEFT_CURLY_BRACKET` | `0x7B` |
+|                  `LATIN` | `0x4C` |                    `ANY` | `0x5C` |                  `LATIN` | `0x6C` |          `VERTICAL_LINE` | `0x7C` |
+|                  `LATIN` | `0x4D` |   `RIGHT_SQUARE_BRACKET` | `0x5D` |                  `LATIN` | `0x6D` |    `RIGHT_CURLY_BRACKET` | `0x7D` |
+|                  `LATIN` | `0x4E` |                    `ANY` | `0x5E` |                  `LATIN` | `0x6E` |                    `ANY` | `0x7E` |
+|                  `LATIN` | `0x4F` |               `LOW_LINE` | `0x5F` |                  `LATIN` | `0x6F` |                `UNKNOWN` | `0x7F` |
