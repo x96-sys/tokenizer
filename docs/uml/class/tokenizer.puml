@@ -1,0 +1,239 @@
+@startuml lexer
+
+' !theme crt-amber
+
+package org.x96.sys.core.tokenizer {
+  package chain {
+      class VisitorChain {
+        - visitors: InterfaceTokenVisitor[]
+        + {static} VisitorChain(): VisitorChain
+        + addVisitor(visitor: TokenVisitor): void
+        + removeVisitor(visitor: TokenVisitor): void
+        + tokenize(lexer: Lexer): Token[]
+        + getVisitors(): InterfaceTokenVisitor[]
+        + clear(): void
+        --
+        "Manages FIFO list of visitors"
+        "Processes until a compatible visitor is found"
+      }
+      VisitorChain <|-- org.x96.sys.core.tokenizer.Tokenizer
+      VisitorChain <|-- org.x96.sys.core.tokenizer.token.Token
+      VisitorChain <|-- org.x96.sys.core.tokenizer.visitor.arch.InterfaceTokenVisitor
+  }
+  package input {
+    class InputStream {
+      - hex: int[]
+      + {static} InputStream(input: String): InputStream
+      + {static} InputStream(hex: int[]): InputStream
+      + at(pos: int): int
+      + length(): int
+      - createHexArray(input: String): int[]
+    }
+  }
+  package token {
+    package arch {
+      package span {
+        class Position {
+          + line: int
+          + column: int
+          + offset: int
+          + {static} Position(line: int, column: int, offset: int): Position
+          + getColumn(): int
+          + getLine(): int
+          + getOffset(): int
+        }
+        class Span {
+          + start: Position
+          + end: Position
+          + {static} Span(start: Position, end: Position): Span
+          + getStart(): Position
+          + getEnd(): Position
+          + getLength(): int
+        }
+        Span <|-- org.x96.sys.core.tokenizer.token.arch.span.Position
+      }
+      class CalcPosition {
+        + line_starts: int[]
+        + length: int
+        + {static} CalcPosition(hex: int[]): CalcPosition
+        + getPosition(offset: int): Position
+        - getLine(offset: int): int
+        - getColumn(offset: int): int
+      }
+      CalcPosition <|-- org.x96.sys.core.tokenizer.token.arch.span.Position
+      class Lexeme {
+        + hex: int[]
+        + {static} Lexeme(hex: int[]): Lexeme
+      }
+    }
+    class Token {
+      + kind: Kind
+      + lexeme: Lexeme
+      + span: Span
+      + {static} Token(kind: Kind, lexeme: Lexeme, span: Span): Token
+    }
+    Token <|-- org.x96.sys.core.tokenizer.token.arch.Lexeme
+    Token <|-- org.x96.sys.core.tokenizer.token.arch.span.Span
+
+    enum Kind {
+      ....
+      UNKNOWN,
+      ....
+' 0x2  Start of Input
+      SOI
+' 0x3  End of Input
+      EOI
+      ....
+' 0xA `\n`
+      LINE_FEED
+      ....
+' ` `  0x20
+      SPACE
+' `!`  0x21
+      EXCLAMATION_MARK
+' `#`  0x23
+      NUMBER_SIGN
+' `'`  0x27
+      APOSTROPHE
+' `(`  0x28
+      LEFT_PARENTHESIS
+' `)`  0x29
+      RIGHT_PARENTHESIS
+' `*`  0x2A
+      ASTERISK
+' `+`  0x2B
+      PLUS
+' `-`  0x2D
+      HYPHEN_MINUS
+      ....
+' `0`  0x30
+      DIGIT_ZERO
+' `;`  0x3B
+      SEMICOLON
+' `=`  0x3D
+      EQUALS
+' `?`  0x3F
+      QUESTION_MARK
+      ....
+' `@`  0x40
+      COMMERCIAL_AT
+      ....
+' `X`  0x58
+      LATIN_CAPITAL_LETTER_X
+' `[`  0x5B
+      LEFT_SQUARE_BRACKET
+' `]`  0x5D
+      RIGHT_SQUARE_BRACKET
+' `_`  0x5F
+      LOW_LINE
+      ....
+' `x`  0x78
+      LATIN_SMALL_LETTER_X
+' `{`  0x7B
+      LEFT_CURLY_BRACKET
+' `|`  0x7C
+      VERTICAL_LINE
+' `}`  0x7D
+      RIGHT_CURLY_BRACKET
+      ....
+' [0x41-0x5A 0x61-0x7A];
+      LATIN
+' 09 AF af  [0x30-0x39 0x41-0x46 0x61-0x66];
+      HEX_DIGIT
+' [0x20-0x7E]
+      ANY
+      ....
+      + {static} is(hex: int): Kind
+      ....
+      + {static} isEOI(hex: int): boolean
+      + {static} isEquals(hex: int): boolean
+      + {static} isSpace(hex: int): boolean
+      + {static} isLeftCurlyBracket(hex: int): boolean
+      + {static} isDigitZero(hex: int): boolean
+      ..others helpers..
+    }
+  }
+  package visitor {
+    package arch {
+      interface InterfaceTokenVisitor {
+        + canVisit(): boolean
+        + visit(): Token[]
+      }
+      InterfaceTokenVisitor <|-- org.x96.sys.core.tokenizer.token.Token
+
+      abstract AbstractVisitor {
+        + tokenizer: Tokenizer
+        + tokens: Token[]
+        + chain: VisitorChain
+        + {static} AbstractVisitor(tokenizer: Tokenizer): AbstractVisitor
+        + look(): int
+        + kind(): Kind
+        + rec(): void
+        + rec(kind: Kind): void
+        + push(tokenArray: Token[]): void
+        + tokenStream(): Token[]
+      }
+      AbstractVisitor <|-- org.x96.sys.core.tokenizer.Tokenizer
+      AbstractVisitor <|-- org.x96.sys.core.tokenizer.chain.VisitorChain
+      AbstractVisitor <|-- org.x96.sys.core.tokenizer.token.Kind
+      AbstractVisitor <|-- org.x96.sys.core.tokenizer.token.Token
+    }
+    package handler {
+      class EntryPointVisitor extends org.x96.sys.core.tokenizer.visitor.arch.AbstractVisitor implements org.x96.sys.core.tokenizer.visitor.arch.InterfaceTokenVisitor {
+        + {static} EntryPointVisitor(tokenizer: Tokenizer): EntryPointVisitor
+        + canVisit(): boolean
+        + visit(): Token[]
+        - soi(): void
+        - eoi(): void
+      }
+      package terminal {
+        class AnyVisitor extends org.x96.sys.core.tokenizer.visitor.arch.AbstractVisitor implements org.x96.sys.core.tokenizer.visitor.arch.InterfaceTokenVisitor {
+          + {static} AnyVisitor(tokenizer: Tokenizer): AnyVisitor
+          + canVisit(): boolean
+          + visit(): Token[]
+        }
+        class DocVisitor extends org.x96.sys.core.tokenizer.visitor.arch.AbstractVisitor implements org.x96.sys.core.tokenizer.visitor.arch.InterfaceTokenVisitor {
+          + canVisit(): boolean
+          + visit(): Token[]
+        }
+        class EmptySpaceVisitor extends org.x96.sys.core.tokenizer.visitor.arch.AbstractVisitor implements org.x96.sys.core.tokenizer.visitor.arch.InterfaceTokenVisitor {
+          + canVisit(): boolean
+          + visit(): Token[]
+        }
+        class HexVisitor extends org.x96.sys.core.tokenizer.visitor.arch.AbstractVisitor implements org.x96.sys.core.tokenizer.visitor.arch.InterfaceTokenVisitor {
+          + canVisit(): boolean
+          + visit(): Token[]
+        }
+        class IdentityVisitor extends org.x96.sys.core.tokenizer.visitor.arch.AbstractVisitor implements org.x96.sys.core.tokenizer.visitor.arch.InterfaceTokenVisitor {
+          + canVisit(): boolean
+          + visit(): Token[]
+        }
+        class WordVisitor extends org.x96.sys.core.tokenizer.visitor.arch.AbstractVisitor implements org.x96.sys.core.tokenizer.visitor.arch.InterfaceTokenVisitor {
+          + canVisit(): boolean
+          + visit(): Token[]
+        }
+      }
+    }
+  }
+  class Tokenizer {
+    - in: InputStream
+    - index: int
+    - calc: CalcPosition
+    + {static} Tokenizer(InputStream in): Tokenizer
+    +  peek(): int
+    +  kind(): Kind
+    +  advance(): void
+    +  tokenize(): Token
+    +  tokenize(Kind kind): Token
+    +  getCurrentPosition(): Position
+    +  getSourceLines(): String[]
+  }
+  Tokenizer <|-- org.x96.sys.core.tokenizer.input.InputStream
+  Tokenizer <|-- org.x96.sys.core.tokenizer.token.Kind
+  Tokenizer <|-- org.x96.sys.core.tokenizer.token.Token
+  Tokenizer <|-- org.x96.sys.core.tokenizer.token.arch.CalcPosition
+  Tokenizer <|-- org.x96.sys.core.tokenizer.token.arch.Lexeme
+  Tokenizer <|-- org.x96.sys.core.tokenizer.token.arch.span.Position
+  Tokenizer <|-- org.x96.sys.core.tokenizer.token.arch.span.Span
+}
+@enduml
