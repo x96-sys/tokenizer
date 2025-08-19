@@ -1,0 +1,55 @@
+@startuml
+
+actor user
+entity sys
+
+' INICIA TOKENIZER
+entity Tokenizer as tk
+entity OracleRouter as or
+
+
+sys -> tk --++ : call: new Tokenizer(is)
+tk -> sys --++ : recive: tokenizer = new Tokenizer(is)
+
+' INICIA OracleRouter oracle = new OracleRouter();
+sys -> or --++ : call: new OracleRouter()
+or -> sys --++ : recive: oracle = new OracleRouter()
+
+' APRESENTA ROTAS
+' STREAM
+sys -> or --++ : oracle.know(StartOfTextVisitor.class)
+or -> or : add no fim da lista \ndos visitantes conhecidos
+or -> sys --++ : void
+
+sys -> or --++ : oracle.know(LatinSmallLetterAVisitor.class)
+or -> or : add no fim da lista \ndos visitantes conhecidos
+or -> sys --++ : void
+
+
+sys -> or --++ : oracle.know(EndOfTextVisitor.class)
+or -> or : add no fim da lista \ndos visitantes conhecidos
+or -> sys --++ : void
+
+sys -> or --++ : stream(tokenizer)
+
+
+loop enquanto tokenizer aberto e visitor reconhecido
+    or -> tk --++ : ask: closed()
+    tk -> or --++ : resp: bool
+    or -> tk --++ : ask: look()
+    tk -> or --++ : resp: byte
+    or -> or : visitorTo(byte)
+
+    alt visitante conhecido
+        or -> or : happens(visitor, tokenizer)
+        or -> Visitor : safeVisit()
+        Visitor --> or : Token[]
+        or -> tokens : addAll(tokens)
+    else nenhum visitante
+        or -> sys : erro ou finalização
+    end
+end
+
+or --> sys : Token[]
+
+@enduml

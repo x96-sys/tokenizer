@@ -1,0 +1,309 @@
+@startuml lexer
+
+' !theme crt-amber
+
+package org.x96.sys.foundation {
+  package buzz {
+    exception Buzz {}
+    package tokenizer.architecture.router {
+      package implementations {
+        package serial {
+          exception BuzzUnexpectedTokenForVisitor extends org.x96.sys.foundation.buzz.Buzz {
+            + {static} CODE: 0x71
+          }
+          exception BuzzCantSerialize extends org.x96.sys.foundation.buzz.Buzz {
+            + {static} CODE: 0x72
+          }
+        }
+      }
+    }
+    package tokenizer.architecture.router.architecture {
+      package dispatcher {
+        exception BuzzAmbiguousRouting extends org.x96.sys.foundation.buzz.Buzz {
+          + {static} CODE: 0xE1
+        }
+        exception BuzzRouterVisitorsEmpty extends org.x96.sys.foundation.buzz.Buzz {
+          + {static} CODE: 0xE2
+        }
+      }
+      package analyzer {
+        exception BuzzAnalyzerEmpty extends org.x96.sys.foundation.buzz.Buzz {
+          + {static} CODE: 0xA1
+        }
+        exception BuzzAmbiguousVisitor extends org.x96.sys.foundation.buzz.Buzz {
+          + {static} CODE: 0xA2
+        }
+      }
+    }
+  }
+
+  package tokenizer {
+    package architecture {
+      package router {
+        package architecture {
+          package analyzer {
+            class Analyzer {
+              + {static} build(router: Router): Map[int, Visitor]
+            }
+            note right of Analyzer::build
+              throws [0xA1] [BuzzAnalyzerEmpty]
+              throws [0xA2] [BuzzAmbiguousVisitor]
+            end note
+
+          }
+          package dispatcher {
+            class Dispatcher {
+              - table: Map[int, Visitor]
+              + {static} Dispatcher(router: Router): Dispatcher
+              + getTable(): Map[int, Visitor]
+              + toString(): str
+            }
+            Dispatcher --> Analyzer
+            Dispatcher ..> org.x96.sys.foundation.tokenizer.architecture.visitor.base.Visiting
+            Dispatcher ..> org.x96.sys.foundation.tokenizer.architecture.router.base.Router
+            note left of Dispatcher::Dispatcher
+              throws [0xE1] [BuzzAmbiguousRouting]
+              throws [0xE2] [BuzzRouterVisitorsEmpty]
+            end note
+          }
+
+        }
+        package base {
+          interface Routing {
+            + visitorTo(int hex): Class<? extends Visiting>
+            + stream(Tokenizer tokenizer): Token[]
+            + analysis(): void
+            + clear(): void
+          }
+          abstract Router implements Routing {
+            + visitors: Class<? extends Visitor>[]
+            + dispatcher: Dispatcher
+            + analyzed: false
+            + know(visitorClass: Class<? extends Visitor>)
+            + build(cls: Class<? extends Visitor>, tokenizer: Tokenizer): Constructor<? extends Visiting>
+            + happens(cls: Class<? extends Visiting>, tokenizer: Tokenizer): Visiting
+          }
+        }
+        package implementations {
+          package oracle {
+            class Oracle extends org.x96.sys.foundation.tokenizer.architecture.router.base.Router {
+              + visitorTo(int hex): Class<? extends Visiting>
+              + stream(Tokenizer tokenizer): Token[]
+            }
+          }
+
+          package switcher {
+            class Switcher extends org.x96.sys.foundation.tokenizer.architecture.router.base.Router {
+              + visitorTo(int hex): Class<? extends Visiting>
+              + stream(Tokenizer tokenizer): Token[]
+            }
+            note left of Switcher::visitorTo
+              remove visitors on first call
+            end note
+
+            note left of Switcher::stream
+              throws [0xE2] [BuzzHasNoVisitors]
+            end note
+          }
+
+
+
+          package serial {
+            package architecture {
+              enum Quantifier {
+                JUST_ONE
+                ZERO_OR_ONE
+                ZERO_OR_MORE
+                ONE_OR_MORE
+              }
+              struct Step {
+                visitor: Visitor
+                quantifier: Quantifier
+              }
+            }
+            class Serial extends org.x96.sys.foundation.tokenizer.architecture.router.base.Router {
+              + visitorInLine(): Step
+              + know(visitor: Visitor): void
+              + one(visitor: Visitor): void
+              + zeroOrOne(visitor: Visitor): void
+              + zeroOrMore(visitor: Visitor): void
+              + oneOrMore(visitor: Visitor): void
+              + stream(Tokenizer tokenizer): Token[]
+              - knock(t: Tokenizer, r: Token[]): void
+              - afterVisit(bool: allowed)
+            }
+            Serial --> architecture.Quantifier
+            Serial --> architecture.Step
+            note left of Serial::stream
+              throws [0x72] [BuzzCantSerialize]
+            end note
+            note left of Serial::afterVisit
+              if blocked and waiting
+              throws [0x71] [BuzzUnexpectedTokenForVisitor]
+            end note
+
+          }
+        }
+      }
+      package visitor {
+        package base {
+          interface Visiting {
+            + allowed(): bool
+            + visit(): Token[]
+            + visitorName(): str
+          }
+          abstract Visitor implements Visiting {
+            + tokenizer: Tokenizer
+            + tokens: Token[]
+            + {static} Visitor(Tokenizer tokenizer): Visitor
+            + visit(): Token[]
+            + safeVisit(): Token[]
+            + overkind(): Kind
+            + look(): byte
+            + kind(): Kind
+            + rec(): void
+            + rec(kind: Kind): void
+            + push(tokens: Token[]): void
+            + stream(): Token[]
+          }
+        }
+        package entry {
+          package compound {
+            package decimal {}
+            package doc {}
+            package emptySpace {}
+            package hex {}
+            package identity {}
+            package latin {}
+            package rangeHex {}
+            package word {}
+          }
+          package terminals {
+            class Terminal extends org.x96.sys.foundation.tokenizer.architecture.visitor.base.Visitor {
+              + {static} Terminal(tokenizer: Tokenizer): Terminal
+              + allowed(): bool
+            }
+            package c0 {}
+            package c1 {}
+            package c2 {}
+            package c3 {}
+            package c4 {}
+            package c5 {}
+            package c6 {}
+            package c7 {}
+          }
+        }
+      }
+    }
+    package token {
+      package architecture {
+        package span {
+          struct Position {
+            + line: int
+            + column: int
+            + offset: int
+            + toString(): str
+          }
+          struct Span {
+            + start: Position
+            + end: Position
+            + toString(): str
+          }
+          Span --> Position
+        }
+        struct CalcPosition {
+          + line_starts: int[]
+          + {static} CalcPosition(bytes: byte[]): CalcPosition
+          + getPosition(offset: int): Position
+          + getLine(offset: int): int
+          + getColumn(offset: int): int
+        }
+        struct Lexeme {
+          + raw: int
+          + toString(): str
+        }
+      }
+      enum Kind {
+        ..generic..
+        UNKNOWN
+        ..0x0..
+        NULL
+        SOH
+        STX
+        ETX
+        ...
+        ..0x1..
+        DLE
+        DC1
+        DC2
+        ...
+        ..0x2..
+        SPACE
+        EXCLAMATION_MARK
+        QUOTATION_MARK
+        NUMBER_SIGN
+        ...
+        ..0x3..
+        DIGIT_ZERO
+        ...
+        ..0x4..
+        COMMERCIAL_AT
+        ...
+        ..0x5..
+        LATIN_CAPITAL_LETTER_P
+        ..0x6..
+        ...
+        GRAVE_ACCENT
+        ..0x7..
+        ...
+        LATIN_SMALL_LETTER_P
+        ...
+        ..non-terminals..
+        Doc
+        EmptySpace
+        Hex
+        RangeHex
+        Identity
+        Word
+        Latin
+        ..helpers..
+        + is(b: int): Kind
+        + isNull(b: int): bool
+        + isStx(b: int): bool
+        + isEtx(b: int): bool
+        + isLineFeed(b: int): bool
+        + isSpace(b: int): bool
+        + isDigitZero(b: int): bool
+      }
+      struct Token {
+        + kind: Kind
+        + lexeme: Lexeme
+        + span: Span
+        + toString(): str
+      }
+      Token --> Kind
+      Token --> architecture.Lexeme
+      Token --> architecture.span.Span
+    }
+    struct Tokenizer {
+      - in: ByteStream
+      - cursor: int
+      + calc: CalcPosition
+      + ready(): bool
+      + pointer(): int
+      + position(): Position
+      + look(): int
+      + kind(): Kind
+      + tokenize(): Token
+      + tokenize(kind: Kind): Token
+      + advance(): void
+      + getLineByNumber(int: line): String
+    }
+    Tokenizer --> org.x96.sys.foundation.io.ByteStream
+    Tokenizer --> token.architecture.CalcPosition
+  }
+}
+
+org.x96.sys.foundation.tokenizer.architecture.visitor.base.Visitor --> org.x96.sys.foundation.tokenizer.Tokenizer
+org.x96.sys.foundation.tokenizer.architecture.visitor.base.Visitor --> org.x96.sys.foundation.tokenizer.token.Token
+@enduml
