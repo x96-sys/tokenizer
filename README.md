@@ -4,22 +4,22 @@ Respects [Basic Latin (ASCII)](https://www.unicode.org/charts/PDF/U0000.pdf)
 
 Implements [Basic table](Kind.md)
 
-**Patterns**: `Visitor`; `Chain Of Responsibility`
+**Patterns**: `Visitor`; `Chain Of Responsibility`; `Strategy`
 
 ## Flow
 
 #### Receives/Starts
 
-*   **string**
-    *   auto-adds `SOI` (`0x2`) sentinel at the start
-    *   converts string to an integer array
-    *   auto-adds `EOI` (`0x3`) sentinel at the end
-*   **integer array**
-    *   no sentinel is included
+- **string**
+  - auto-adds `SOI` (`0x2`) sentinel at the start
+  - converts string to an integer array
+  - auto-adds `EOI` (`0x3`) sentinel at the end
+- **integer array**
+  - no sentinel is included
 
 #### Concludes/Returns
 
-*   array of `Token` with `Kind`, `Lexeme`, and `Span`
+- array of `Token` with `Kind`, `Lexeme`, and `Span`
 
 ## Example
 
@@ -59,9 +59,13 @@ Token { kind[SEMICOLON] Lexeme[0x3B] Span[{1:4 4}:{1:5 5}] }
 Token { kind[EOI]       Lexeme[0x3]  Span[{1:5 5}:{1:6 6}] }
 ```
 
-👀 In this layer, the tokenizer responds to the [pattern defined](Kind.md) by `Kind`, and further on, the `Visitors` can return re-marked tokens, signaling elements for the `Parser`.
+👀 In this layer, the tokenizer responds to the [pattern defined](Kind.md) by
+`Kind`, and further on, the `Visitors` can return re-marked tokens, signaling
+elements for the `Parser`.
 
-Each character of this sentence you are reading corresponds to a hexadecimal value, where a previous, discreet, and silent tokenizer has already been present.
+Each character of this sentence you are reading corresponds to a hexadecimal
+value, where a previous, discreet, and silent tokenizer has already been
+present.
 
 Let's consider the phrase:
 
@@ -69,7 +73,8 @@ Let's consider the phrase:
 "Sofi Ceci"
 ```
 
-There is a binary for each char, which in turn can be represented in octal, decimal, and as adopted in the project, can also be expressed in hexadecimal:
+There is a binary for each char, which in turn can be represented in octal,
+decimal, and as adopted in the project, can also be expressed in hexadecimal:
 
 | Char |     BIN     |  OCT  |  DEC  |  Hex   |
 | :--: | :---------: | :---: | :---: | :----: |
@@ -83,9 +88,11 @@ There is a binary for each char, which in turn can be represented in octal, deci
 | `c`  | `0110 0011` | `143` | `99`  | `0x63` |
 | `i`  | `0110 1001` | `151` | `105` | `0x69` |
 
-There are several ways to represent the same thing. The same number can represent different values depending on the context it fits into.
+There are several ways to represent the same thing. The same number can
+represent different values depending on the context it fits into.
 
-Between `CHAR` and `BIN`, there is already a `Tokenizer`; between `BIN` and `OCT`, there is another.
+Between `CHAR` and `BIN`, there is already a `Tokenizer`; between `BIN` and
+`OCT`, there is another.
 
 A new table respects a previous one to represent its value.
 
@@ -105,26 +112,33 @@ Kind.is(hex)
 
 and returns the corresponding tabulated `Token`.
 
-The visitor implements/calls `Kind.is(hex)` and builds its response according to its rules.
+The visitor implements/calls `Kind.is(hex)` and builds its response according to
+its rules.
 
-In the [Example with a simple rule](#example-with-a-simple-rule), we check that `c` was **tokenized** as `LATIN`, and this respects the [basic table](Kind.md).
+In the [Example with a simple rule](#example-with-a-simple-rule), we check that
+`c` was **tokenized** as `LATIN`, and this respects the [basic table](Kind.md).
 
-Now in this layer, we implement the `Visitor` that recognizes a grammar we are defining.
+Now in this layer, we implement the `Visitor` that recognizes a grammar we are
+defining.
 
 The `IDENTITY` rule does not appear in the [basic table](Kind.md).
 
 Designing the `IdentityVisitor` ensures that:
-*   any `LATIN` can start an `IDENTITY`
-*   any `LATIN` and `LOW_LINE` can follow the `IDENTITY`
+
+- any `LATIN` can start an `IDENTITY`
+- any `LATIN` and `LOW_LINE` can follow the `IDENTITY`
 
 🦇 By implementing a `Visitor`, we can tabulate a new rule, generating changes:
 
-* `c` was `LATIN`
-* `x` was `LATIN_SMALL_LETTER_X`
+- `c` was `LATIN`
+- `x` was `LATIN_SMALL_LETTER_X`
 
-Now, by including the `IdentityVisitor` in the `VisitorChain`, it is able to respond, to **tokenize** `c` and `x` as `IDENTITY`.
+Now, by including the `IdentityVisitor` in the `VisitorChain`, it is able to
+respond, to **tokenize** `c` and `x` as `IDENTITY`.
 
-The `Tokenizer` has the `tokenize` method that responds with the tabulated `Kind`, and also has `tokenize(kind)` which receives a `Kind` for programmed registration in the `Visitor`.
+The `Tokenizer` has the `tokenize` method that responds with the tabulated
+`Kind`, and also has `tokenize(kind)` which receives a `Kind` for programmed
+registration in the `Visitor`.
 
 The `IdentityVisitor` calls `tokenizer.tokenize(Kind.IDENTITY)`.
 
@@ -132,16 +146,21 @@ The `IdentityVisitor` calls `tokenizer.tokenize(Kind.IDENTITY)`.
 
 The word syntax is `'anything between apostrophes'`.
 
-The `WordVisitor` starts visits with `APOSTROPHE` without needing to re-tabulate; it calls `tokenize()` with the already default `Kind`.
+The `WordVisitor` starts visits with `APOSTROPHE` without needing to
+re-tabulate; it calls `tokenize()` with the already default `Kind`.
 
-Next, anything will be identified as `ANY` by calling `tokenize(Kind.ANY)`, until it finds another `APOSTROPHE` and calls `tokenize()` again without re-tabulation.
+Next, anything will be identified as `ANY` by calling `tokenize(Kind.ANY)`,
+until it finds another `APOSTROPHE` and calls `tokenize()` again without
+re-tabulation.
 
 All this for...
 
-For example, a `Parser` ahead, which will read the token stream and needs a validation of `meaning`/`Kind`, and also the guarantee of the order that each `Visitor` delivers.
+For example, a `Parser` ahead, which will read the token stream and needs a
+validation of `meaning`/`Kind`, and also the guarantee of the order that each
+`Visitor` delivers.
 
-`x` in the middle of an identifier is `IDENTITY`.
-`x` after a `0` is a hexadecimal marker.
+`x` in the middle of an identifier is `IDENTITY`. `x` after a `0` is a
+hexadecimal marker.
 
 This is the magic of the Tokenizer.
 
